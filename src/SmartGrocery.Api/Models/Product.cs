@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SmartGrocery.Api.Models;
 
 public class Product
@@ -9,5 +11,6 @@ public class Product
     public string? Barcode { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    [JsonIgnore]
     public ICollection<PurchaseItem> PurchaseItems { get; set; } = new List<PurchaseItem>();
 }

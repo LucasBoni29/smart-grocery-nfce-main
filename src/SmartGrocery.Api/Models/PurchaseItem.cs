@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace SmartGrocery.Api.Models;
 
 public class PurchaseItem
 {
     public int Id { get; set; }
     public int PurchaseId { get; set; }
+    [JsonIgnore]
     public Purchase Purchase { get; set; } = null!;
 
     public int ProductId { get; set; }

@@ -1,0 +1,37 @@
+.scan-nfce {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.reader {
+  margin-top: 1rem;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.result {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+
+  &--success {
+    background: #e6f4ea;
+  }
+
+  &--warning {
+    background: #fff4e5;
+  }
+
+  &--error {
+    background: #fdecea;
+  }
+}

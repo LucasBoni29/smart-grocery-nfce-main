@@ -22,12 +22,15 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Brand).HasMaxLength(100);
             entity.Property(e => e.Unit).HasMaxLength(20);
             entity.Property(e => e.Barcode).HasMaxLength(50);
+            entity.HasIndex(e => e.Barcode).IsUnique();
         });
 
         modelBuilder.Entity<Purchase>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.StoreName).HasMaxLength(200);
+            entity.Property(e => e.NfceAccessKey).HasMaxLength(44);
+            entity.HasIndex(e => e.NfceAccessKey).IsUnique();
             entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
         });
 

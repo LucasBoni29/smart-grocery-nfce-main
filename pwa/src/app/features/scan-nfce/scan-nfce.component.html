@@ -1,0 +1,27 @@
+<section class="scan-nfce">
+  <h1>Casa Inteligente de Compras</h1>
+  <p>Escaneie o QR Code da NFC-e para importar a compra automaticamente.</p>
+
+  <button *ngIf="state === 'idle' || state === 'error' || state === 'duplicate'" type="button" (click)="startScan()">
+    Escanear Nota
+  </button>
+
+  <div [id]="readerElementId" class="reader" [class.hidden]="state !== 'scanning'"></div>
+
+  <p *ngIf="state === 'scanning'">Aponte a camera para o QR Code da nota.</p>
+  <p *ngIf="state === 'sending'">Processando a NFC-e...</p>
+
+  <div *ngIf="state === 'success' && lastPurchase" class="result result--success">
+    <h2>Compra importada!</h2>
+    <p><strong>{{ lastPurchase.storeName }}</strong></p>
+    <p>{{ lastPurchase.items.length }} itens - R$ {{ lastPurchase.totalAmount }}</p>
+  </div>
+
+  <div *ngIf="state === 'duplicate'" class="result result--warning">
+    <p>Esta NFC-e ja foi importada anteriormente.</p>
+  </div>
+
+  <div *ngIf="state === 'error'" class="result result--error">
+    <p>{{ errorMessage }}</p>
+  </div>
+</section>

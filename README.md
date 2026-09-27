@@ -10,8 +10,8 @@ O **Casa Inteligente de Compras** é composto por:
 |--------|-----------|--------|
 | API | ASP.NET Core 8 | ✅ Implementado |
 | Banco de Dados | PostgreSQL 16 + EF Core 8 | ✅ Implementado |
-| PWA (Frontend) | A definir | 🔜 Planejado |
-| Processamento NFC-e | A definir | 🔜 Planejado |
+| PWA (Frontend) | Angular 18 | 🚧 Em desenvolvimento |
+| Processamento NFC-e | HTML parsing (SEFAZ-SP) | ✅ Implementado |
 | IA / Recomendações | A definir | 🔜 Planejado |
 
 ## Estrutura do Projeto
@@ -42,6 +42,7 @@ smart-grocery-nfce/
 | GET | `/api/purchases` | Histórico de compras |
 | GET | `/api/purchases/{id}` | Detalhes de uma compra |
 | POST | `/api/purchases` | Registrar nova compra |
+| POST | `/api/purchases/import-nfce` | Capturar URL de uma NFC-e |
 | DELETE | `/api/purchases/{id}` | Remover compra |
 | GET | `/api/products` | Listar produtos |
 | GET | `/api/products/{id}` | Detalhes de um produto |
@@ -49,43 +50,117 @@ smart-grocery-nfce/
 | PUT | `/api/products/{id}` | Atualizar produto |
 | DELETE | `/api/products/{id}` | Remover produto |
 
+### Captura de NFC-e (Versão 0)
+
+Envie a URL obtida pelo QR Code para consultar a NFC-e publica. A API extrai e valida a chave de acesso de 44 digitos, processa os dados da nota e registra a compra, produtos e itens em uma unica operacao.
+
+```http
+POST /api/purchases/import-nfce
+Content-Type: application/json
+
+{
+  "nfceUrl": "https://www.exemplo.gov.br/nfce?qrcode=..."
+}
+```
+
+Uma importacao valida retorna `201 Created`. Uma URL sem chave NFC-e valida retorna `400 Bad Request`; uma consulta recusada ou em formato nao suportado retorna `422 Unprocessable Entity`; uma nota ja processada retorna `409 Conflict`. Uma captura antiga, sem itens, pode ser reenviada para ser processada.
+
 ## Como Rodar Localmente
 
 ### Pré-requisitos
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Docker & Docker Compose](https://docs.docker.com/compose/)
+- Docker rodando dentro de uma distribuição WSL (ex.: `Ubuntu-24.04`)
 
-### Com Docker Compose
+### Primeira vez nesta máquina
+
+Crie o arquivo `.env` na raiz do projeto (ele já está no `.gitignore`, não é commitado):
 
 ```bash
-# Defina a senha do PostgreSQL
-export POSTGRES_PASSWORD=sua_senha_aqui
-
-# Suba o banco e a API
-docker compose up --build
+wsl -d Ubuntu-24.04
+cd /mnt/d/Projects/smart-grocery-nfce
+echo "POSTGRES_PASSWORD=sua_senha_aqui" > .env
 ```
 
-A API estará disponível em `http://localhost:5000` e o Swagger em `http://localhost:5000/swagger`.
+Esse arquivo é lido automaticamente pelo `docker compose`, então a senha não precisa ser exportada novamente em outras sessões.
 
-### Desenvolvimento Local
+### Ligar a infra no dia a dia
+
+Sempre que for continuar o desenvolvimento (após reiniciar o PC, o Docker ou o WSL):
+
+```bash
+# 1. Abra a distribuição onde o Docker roda
+wsl -d Ubuntu-24.04
+
+# 2. Entre na pasta do projeto
+cd /mnt/d/Projects/smart-grocery-nfce
+
+# 3. Suba o banco e a API (usa a senha do .env automaticamente)
+docker compose up --build -d
+
+# 4. Confirme que os containers estão de pé
+docker ps
+```
+
+Você deve ver `smart_grocery_api` e `smart_grocery_db` com status `Up`. A API estará em `http://localhost:5000` e o Swagger em `http://localhost:5000/swagger`.
+
+### Ver logs da API
+
+```bash
+docker compose logs -f api
+```
+
+### Desligar a infra
+
+```bash
+docker compose down
+```
+
+Os dados do PostgreSQL persistem no volume `pg_data` entre desligamentos; eles só são apagados com `docker compose down -v`.
+
+### Desenvolvimento sem Docker para a API
 
 ```bash
 # Suba apenas o banco de dados
-export POSTGRES_PASSWORD=sua_senha_aqui
 docker compose up db -d
 
 # Configure a connection string via user secrets (não commite senhas)
 cd src/SmartGrocery.Api
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=smart_grocery;Username=postgres;******"
+  "Host=localhost;Port=5432;Database=smart_grocery;Username=postgres;Password=sua_senha_aqui"
 
 # Aplique as migrações
-dotnet ef database update
+dotnet tool restore
+dotnet tool run dotnet-ef database update
 
 # Execute a API
-dotnet run
+dotnet run --launch-profile http
 ```
+
+### PWA (Angular)
+
+Pré-requisito: [Node.js 20+](https://nodejs.org/).
+
+```bash
+cd pwa
+npm install
+
+# Ambiente de desenvolvimento (usa http://localhost:5000/api, ver src/environments/environment.ts)
+npm start
+```
+
+A PWA abre em `http://localhost:4200`. Para testar no iPhone, conecte o computador e o celular à mesma rede Wi-Fi e abra `http://IP_DO_COMPUTADOR:4200` (por exemplo, `http://192.168.0.70:4200`). A tela inicial pede permissão de câmera, escaneia o QR Code da NFC-e e envia a URL lida para `POST /api/purchases/import-nfce`.
+
+Para testar a câmera no iPhone, use uma URL HTTPS. O modo recomendado para desenvolvimento é iniciar a PWA e criar um túnel HTTPS:
+
+```powershell
+cd pwa
+npm start
+ngrok http 4200
+```
+
+Abra no iPhone a URL `https://*.ngrok-free.app` exibida pelo ngrok. O proxy em `proxy.conf.json` encaminha `/api` para a API local sem expor uma chamada HTTP ao navegador.
+
 
 ## Funcionalidades Futuras
 

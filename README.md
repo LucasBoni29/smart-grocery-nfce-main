@@ -65,6 +65,29 @@ Content-Type: application/json
 
 Uma importacao valida retorna `201 Created`. Uma URL sem chave NFC-e valida retorna `400 Bad Request`; uma consulta recusada ou em formato nao suportado retorna `422 Unprocessable Entity`; uma nota ja processada retorna `409 Conflict`. Uma captura antiga, sem itens, pode ser reenviada para ser processada.
 
+### Autenticação por chave de API
+
+A API aceita um header `X-Api-Key` como trava simples contra acesso não autorizado. Ela é uma
+senha compartilhada, não um login por usuário — protege contra quem não conhece a chave, mas não
+distingue quem está chamando.
+
+- **Em desenvolvimento local** (`ASPNETCORE_ENVIRONMENT=Development`, o padrão do `docker compose`
+  e do `dotnet run`): a variável `ApiKey` é opcional. Se ficar em branco, a API roda aberta, como
+  sempre rodou.
+- **Fora de desenvolvimento** (qualquer deploy, ex.: Railway): a variável `ApiKey` é obrigatória.
+  Sem ela, a API recusa subir.
+
+Pra testar a trava localmente, defina `API_KEY` no `.env` antes do `docker compose up` (mesmo
+arquivo onde já fica o `POSTGRES_PASSWORD`), ou `ApiKey` via `dotnet user-secrets` no projeto da
+API. Toda chamada precisa então do header:
+
+```http
+GET /api/purchases
+X-Api-Key: <a mesma chave configurada na API>
+```
+
+O Swagger (`/swagger`) fica de fora da trava, porque só serve documentação, nunca dado.
+
 ## Como Rodar Localmente
 
 ### Pré-requisitos

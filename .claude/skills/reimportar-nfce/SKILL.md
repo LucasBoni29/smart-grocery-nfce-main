@@ -45,30 +45,34 @@ Preencher `$nota` e rodar no PowerShell (colar direto, sem salvar em arquivo):
 ```powershell
 $ErrorActionPreference = 'Stop'; [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $nota = '<URL do QR Code ou chave de 44 dígitos>'
+# Se a API tiver a trava ligada (variável ApiKey), define antes: $env:SMARTGROCERY_API_KEY = '...'
+$hdr = if ($env:SMARTGROCERY_API_KEY) { @{ 'X-Api-Key' = $env:SMARTGROCERY_API_KEY } } else { @{} }
 $candidatos = @('http://localhost:5000', 'http://localhost:5170')   # 5000 = docker, 5170 = dotnet run
 $key = [regex]::Match($nota, '(?<!\d)\d{44}(?!\d)').Value
-$base = $candidatos | Where-Object { try { (Invoke-WebRequest "$_/api/purchases" -UseBasicParsing -TimeoutSec 3).StatusCode -eq 200 } catch { $false } } | Select-Object -First 1
-if (-not $base) { 'API fora do ar' } else {
-    $old = @(Invoke-RestMethod "$base/api/purchases") | Where-Object { $_.nfceAccessKey -eq $key } | Select-Object -First 1
+$base = $candidatos | Where-Object { try { (Invoke-WebRequest "$_/api/purchases" -Headers $hdr -UseBasicParsing -TimeoutSec 3).StatusCode -eq 200 } catch { $false } } | Select-Object -First 1
+if (-not $base) { 'API fora do ar (ou recusou por causa da X-Api-Key — confere $env:SMARTGROCERY_API_KEY)' } else {
+    $old = @(Invoke-RestMethod "$base/api/purchases" -Headers $hdr) | Where-Object { $_.nfceAccessKey -eq $key } | Select-Object -First 1
     $url = if ($nota -match '^https?://') { $nota } else { $old.nfceUrl }
     $oldIds = @($old.items.productId | Sort-Object -Unique)
-    if ($old) { Invoke-RestMethod -Method Delete "$base/api/purchases/$($old.id)" | Out-Null; "Compra $($old.id) apagada ($(@($old.items).Count) itens)" }
-    try { $new = Invoke-RestMethod -Method Post "$base/api/purchases/import-nfce" -ContentType 'application/json' -Body (@{ nfceUrl = $url } | ConvertTo-Json) }
+    if ($old) { Invoke-RestMethod -Method Delete "$base/api/purchases/$($old.id)" -Headers $hdr | Out-Null; "Compra $($old.id) apagada ($(@($old.items).Count) itens)" }
+    try { $new = Invoke-RestMethod -Method Post "$base/api/purchases/import-nfce" -Headers $hdr -ContentType 'application/json' -Body (@{ nfceUrl = $url } | ConvertTo-Json) }
     catch { "Falhou: HTTP $([int]$_.Exception.Response.StatusCode) $($_.ErrorDetails.Message)"; $new = $null }
     if ($new) {
-        $p = Invoke-RestMethod "$base/api/purchases/$($new.id)"
+        $p = Invoke-RestMethod "$base/api/purchases/$($new.id)" -Headers $hdr
         $items = @($p.items)
         $soma = [math]::Round(($items | Measure-Object totalPrice -Sum).Sum, 2)
         "Compra $($p.id) | $($p.storeName) | $($p.purchasedAt) | $($items.Count) itens | total $($p.totalAmount) | soma $soma | dif $([math]::Round($p.totalAmount - $soma, 2))"
         $items | Select-Object @{N='Produto';E={$_.product.name}}, quantity, unit, unitPrice, totalPrice, @{N='EAN';E={$_.product.barcode}} | Format-Table -AutoSize | Out-String -Width 200
         $ruins = $items | Where-Object { [math]::Abs($_.quantity * $_.unitPrice - $_.totalPrice) -gt 0.05 }
         if ($ruins) { 'qtd x unitário != total em:'; $ruins | ForEach-Object { "  - $($_.product.name)" } }
-        $usados = @(Invoke-RestMethod "$base/api/purchases") | ForEach-Object { $_.items.productId }
+        $usados = @(Invoke-RestMethod "$base/api/purchases" -Headers $hdr) | ForEach-Object { $_.items.productId }
         $orfaos = $oldIds | Where-Object { $_ -notin $usados }
         if ($orfaos) { "Produtos órfãos (ids): $($orfaos -join ', ')" }
     }
 }
 ```
+
+Se a API estiver com a trava ligada (`ApiKey` configurada), definir `$env:SMARTGROCERY_API_KEY` antes de rodar o snippet. Sem isso, toda chamada volta com HTTP 401.
 
 Se a saída for "API fora do ar", avisar como subir (README do projeto):
 - Docker, dentro do WSL: `docker compose up -d` (API em `http://localhost:5000`)
@@ -98,8 +102,9 @@ Só com "sim":
 
 ```powershell
 $base = '<a API que respondeu>'
+$hdr = if ($env:SMARTGROCERY_API_KEY) { @{ 'X-Api-Key' = $env:SMARTGROCERY_API_KEY } } else { @{} }
 foreach ($id in @(<ids confirmados>)) {
-    try { Invoke-RestMethod -Method Delete "$base/api/products/$id" | Out-Null; "Produto $id apagado" }
+    try { Invoke-RestMethod -Method Delete "$base/api/products/$id" -Headers $hdr | Out-Null; "Produto $id apagado" }
     catch { "Produto $id não apagado: HTTP $([int]$_.Exception.Response.StatusCode)" }
 }
 ```

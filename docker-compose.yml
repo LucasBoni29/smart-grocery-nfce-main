@@ -31,6 +31,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=smart_grocery;Username=postgres;Password=${POSTGRES_PASSWORD}"
+      # Opcional em desenvolvimento (ASPNETCORE_ENVIRONMENT=Development): se ficar em
+      # branco, a API roda aberta como sempre. Defina no .env pra testar a trava localmente.
+      ApiKey: ${API_KEY:-}
     ports:
       - "5000:8080"
 

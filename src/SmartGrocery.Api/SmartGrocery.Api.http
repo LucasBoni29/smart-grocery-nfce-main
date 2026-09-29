@@ -1,11 +1,15 @@
 @SmartGrocery.Api_HostAddress = http://localhost:5000
+# So precisa se a variavel ApiKey estiver configurada (opcional em dev, obrigatoria em deploy)
+@ApiKey =
 
 GET {{SmartGrocery.Api_HostAddress}}/api/purchases
 Accept: application/json
+X-Api-Key: {{ApiKey}}
 
 ###
 
 GET {{SmartGrocery.Api_HostAddress}}/api/products
 Accept: application/json
+X-Api-Key: {{ApiKey}}
 
 ###

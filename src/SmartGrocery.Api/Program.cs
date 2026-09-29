@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using SmartGrocery.Api.Data;
 using SmartGrocery.Api.Services;
@@ -25,6 +27,16 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+var apiKey = builder.Configuration["ApiKey"];
+
+// Fora do ambiente de desenvolvimento (ex: Railway), a API tem que nascer protegida.
+// Sem isso, um deploy sem a variavel ApiKey configurada ficaria publico por engano.
+if (!builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(apiKey))
+{
+    throw new InvalidOperationException(
+        "A variavel de ambiente 'ApiKey' precisa estar configurada fora do ambiente de desenvolvimento.");
+}
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -41,6 +53,35 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("Development");
 app.UseHttpsRedirection();
+
+// Se a chave nao foi configurada (dev local, por padrao), a API fica aberta como sempre.
+// Se foi configurada (dev local opcional, ou qualquer deploy), toda chamada precisa do
+// header X-Api-Key com o valor certo. /swagger fica de fora porque so serve documentacao.
+if (!string.IsNullOrWhiteSpace(apiKey))
+{
+    var apiKeyBytes = Encoding.UTF8.GetBytes(apiKey);
+
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/swagger"))
+        {
+            await next();
+            return;
+        }
+
+        var provided = context.Request.Headers["X-Api-Key"].ToString();
+        if (string.IsNullOrEmpty(provided) ||
+            !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(provided), apiKeyBytes))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new { message = "Chave de API ausente ou invalida." });
+            return;
+        }
+
+        await next();
+    });
+}
+
 app.MapControllers();
 
 app.Run();

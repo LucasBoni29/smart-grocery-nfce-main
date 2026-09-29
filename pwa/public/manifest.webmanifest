@@ -1,8 +1,8 @@
 {
-  "name": "pwa",
-  "short_name": "pwa",
-  "theme_color": "#1976d2",
-  "background_color": "#fafafa",
+  "name": "Casa Inteligente de Compras",
+  "short_name": "Compras",
+  "theme_color": "#0f7a4c",
+  "background_color": "#f5f6f4",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

@@ -1,37 +1,216 @@
-.scan-nfce {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  text-align: center;
+:host {
+  display: block;
 }
 
-button {
-  padding: 0.75rem 1.5rem;
+.page {
+  display: flex;
+  min-height: 100dvh;
+  width: 100%;
+  justify-content: center;
+  // Telas baixas (celular deitado, notebook com a janela pouco alta) ficam
+  // no topo em vez de cortar o card; telas com folga centralizam.
+  align-items: flex-start;
+  padding: clamp(1rem, 5vh, 3rem) 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(clamp(1rem, 5vh, 3rem), env(safe-area-inset-bottom));
+
+  @media (min-height: 700px) {
+    align-items: center;
+  }
+}
+
+.card {
+  // Ocupa a largura toda em telas estreitas (celular) e trava num tamanho
+  // confortável de leitura em telas largas (tablet, desktop) — sem breakpoint
+  // fixo, o card só cresce até onde faz sentido.
+  width: min(100%, 440px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(1.5rem, 5vw, 2rem) clamp(1.25rem, 5vw, 1.75rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.25rem;
+}
+
+.header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &__icon {
+    font-size: clamp(1.75rem, 6vw, 2rem);
+    line-height: 1;
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 4.5vw, 1.375rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitle {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 0.85rem 1.5rem;
   font-size: 1rem;
+  font-weight: 600;
+  background: var(--primary);
+  color: var(--primary-contrast);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+
+  &:hover {
+    background: var(--primary-hover);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
 }
 
 .reader {
-  margin-top: 1rem;
+  border-radius: calc(var(--radius) - 4px);
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 1 / 1;
 
   &.hidden {
     display: none;
   }
+
+  // O <video> é injetado direto no DOM pela html5-qrcode, fora do template
+  // Angular — por isso não carrega o atributo de encapsulamento do
+  // componente, e precisa do ::ng-deep pra ser alcançado daqui.
+  ::ng-deep video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.hint {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &--loading {
+    color: var(--text);
+  }
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .result {
-  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: calc(var(--radius) - 6px);
+  border: 1px solid;
+
+  &__icon {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
+
+  &__store {
+    font-weight: 600;
+  }
+
+  &__meta {
+    color: var(--text-muted);
+  }
 
   &--success {
-    background: #e6f4ea;
+    background: var(--success-bg);
+    border-color: var(--success-border);
+    color: var(--success-text);
+
+    .result__icon {
+      background: var(--success-border);
+      color: var(--success-text);
+    }
+
+    h2 {
+      color: var(--text);
+    }
+
+    .result__store {
+      color: var(--text);
+    }
   }
 
   &--warning {
-    background: #fff4e5;
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
+    color: var(--warning-text);
+
+    .result__icon {
+      background: var(--warning-border);
+      color: var(--warning-text);
+    }
   }
 
   &--error {
-    background: #fdecea;
+    background: var(--error-bg);
+    border-color: var(--error-border);
+    color: var(--error-text);
+
+    .result__icon {
+      background: var(--error-border);
+      color: var(--error-text);
+    }
   }
 }

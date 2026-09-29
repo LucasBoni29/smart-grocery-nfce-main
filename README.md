@@ -88,6 +88,14 @@ X-Api-Key: <a mesma chave configurada na API>
 
 O Swagger (`/swagger`) fica de fora da trava, porque só serve documentação, nunca dado.
 
+**Na PWA:** `pwa/src/environments/environment.ts` também tem um campo `apiKey`. Ele é
+versionado com valor vazio (`''`) — igual o `environment.prod.ts` — pra quem clonar o
+repositório continuar compilando. Se você preencher esse arquivo localmente com a chave
+real, rode `git update-index --skip-worktree pwa/src/environments/environment.ts` uma vez:
+isso faz o Git parar de enxergar essa mudança pra sempre, então a chave nunca aparece num
+`git status` nem é commitada por engano. Pra reverter (voltar a rastrear o arquivo normal):
+`git update-index --no-skip-worktree pwa/src/environments/environment.ts`.
+
 ## Como Rodar Localmente
 
 ### Pré-requisitos

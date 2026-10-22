@@ -1,0 +1,13 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "Smart Grocery (local)",
+      "driver": "PostgreSQL",
+      "server": "localhost",
+      "port": 5433,
+      "database": "smart_grocery",
+      "username": "postgres",
+      "askForPassword": true
+    }
+  ]
+}

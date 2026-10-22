@@ -158,7 +158,7 @@ docker compose up db -d
 # Configure a connection string via user secrets (não commite senhas)
 cd src/SmartGrocery.Api
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" \
-  "Host=localhost;Port=5432;Database=smart_grocery;Username=postgres;Password=sua_senha_aqui"
+  "Host=localhost;Port=5433;Database=smart_grocery;Username=postgres;Password=sua_senha_aqui"
 
 # Aplique as migrações
 dotnet tool restore

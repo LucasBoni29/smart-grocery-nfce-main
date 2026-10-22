@@ -10,7 +10,10 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD env variable}
     ports:
-      - "5432:5432"
+      # 5433 no host: 5432 colide com um Postgres nativo que ja roda no Windows
+      # (servico "postgresql-x64-16"). Dentro da rede do Docker continua 5432
+      # normal - api -> db nao passa pela porta do host.
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:

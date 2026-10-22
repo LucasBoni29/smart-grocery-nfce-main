@@ -159,11 +159,24 @@ Next.js ou Blazor
 
 ### Hospedagem
 
+Decidido em 22/10/2026: assim que a PWA estiver fechada (fim da Fase X), migrar do Docker local
+pra essa stack, toda em plano gratuito:
+
 ```text
-Railway
-Render
-Azure
+PWA (Angular)  -> Vercel
+API (.NET)     -> Render ou Fly.io (Vercel nao roda ASP.NET Core)
+Banco          -> Supabase (Postgres gerenciado; so trocar a connection string)
+DNS/CDN        -> Cloudflare
+Erros          -> Sentry (SDK oficial pra ASP.NET Core)
+CI/CD          -> GitHub Actions
 ```
+
+Resend (email transacional) ficou de fora: o sistema nao manda email hoje (sem login, sem
+notificacao). Entra quando tiver uso de verdade.
+
+Atencao: Render free tier "dorme" depois de inatividade (cold start de uns 30-50s na proxima
+chamada); Supabase free pausa o projeto apos 1 semana sem uso. Pra uso de fim de semana da
+familia, validar se isso incomoda antes de migrar de vez.
 
 ## Funcionalidades
 

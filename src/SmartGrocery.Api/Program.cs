@@ -19,7 +19,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<CanonicalProductMatcher>();
 builder.Services.AddHttpClient<NfceDocumentReader>(client =>
 {
-    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1");
+    // O WAF da SEFAZ-SP rejeita silenciosamente (HTTP 200 com uma pagina "Request Rejected")
+    // requisicoes que alegam ser um navegador conhecido (testado com UA de Safari e de Chrome)
+    // em algumas URLs de consulta, mas libera uma UA que nao finge ser navegador. Nao
+    // disfarçar.
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("SmartGrocery-NFCeReader/1.0 (+https://github.com/LucasBoni29/smart-grocery-nfce-main)");
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

@@ -91,10 +91,7 @@
     display: none;
   }
 
-  // O <video> é injetado direto no DOM pela html5-qrcode, fora do template
-  // Angular — por isso não carrega o atributo de encapsulamento do
-  // componente, e precisa do ::ng-deep pra ser alcançado daqui.
-  ::ng-deep video {
+  video {
     width: 100%;
     height: 100%;
     object-fit: cover;

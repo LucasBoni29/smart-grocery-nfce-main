@@ -15,7 +15,9 @@
       Escanear Nota
     </button>
 
-    <div [id]="readerElementId" class="reader" [class.hidden]="state !== 'scanning'"></div>
+    <div class="reader" [class.hidden]="state !== 'scanning'">
+      <video #video autoplay playsinline muted></video>
+    </div>
 
     <p *ngIf="state === 'scanning'" class="hint">Aponte a câmera para o QR Code da nota.</p>
 

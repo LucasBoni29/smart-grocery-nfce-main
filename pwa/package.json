@@ -19,10 +19,10 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
     "@angular/service-worker": "^18.2.0",
-    "html5-qrcode": "^2.3.8",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.14.10"
+    "zone.js": "~0.14.10",
+    "zxing-wasm": "^3.1.6"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.21",

@@ -13,11 +13,13 @@ public class PurchasesController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly NfceDocumentReader _nfceDocumentReader;
+    private readonly CanonicalProductMatcher _canonicalProductMatcher;
 
-    public PurchasesController(AppDbContext context, NfceDocumentReader nfceDocumentReader)
+    public PurchasesController(AppDbContext context, NfceDocumentReader nfceDocumentReader, CanonicalProductMatcher canonicalProductMatcher)
     {
         _context = context;
         _nfceDocumentReader = nfceDocumentReader;
+        _canonicalProductMatcher = canonicalProductMatcher;
     }
 
     [HttpGet]
@@ -92,25 +94,29 @@ public class PurchasesController : ControllerBase
         purchase.PurchasedAt = document.PurchasedAt.ToUniversalTime();
         purchase.TotalAmount = document.TotalAmount;
 
+        // Chave e so o nome: o "codigo" (Barcode) que a nota traz e interno de cada loja,
+        // nao um EAN/GTIN universal, entao nao serve pra casar produto entre lojas diferentes.
         var productsByKey = new Dictionary<string, Product>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var item in document.Items)
         {
-            var productKey = item.Barcode ?? item.Name.Trim();
+            var productKey = item.Name.Trim();
             if (!productsByKey.TryGetValue(productKey, out var product))
             {
                 product = await _context.Products.FirstOrDefaultAsync(
-                    candidate => (item.Barcode != null && candidate.Barcode == item.Barcode) || candidate.Name == item.Name,
+                    candidate => candidate.Name == item.Name,
                     cancellationToken);
             }
 
             if (product is null)
             {
+                var canonicalProduct = await _canonicalProductMatcher.MatchOrCreateAsync(item.Name, cancellationToken);
                 product = new Product
                 {
                     Name = item.Name,
                     Unit = item.Unit,
                     Barcode = item.Barcode,
+                    CanonicalProduct = canonicalProduct,
                     CreatedAt = DateTime.UtcNow
                 };
             }

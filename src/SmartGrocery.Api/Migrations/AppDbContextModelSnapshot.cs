@@ -22,6 +22,31 @@ namespace SmartGrocery.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("SmartGrocery.Api.Models.CanonicalProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CanonicalProducts");
+                });
+
             modelBuilder.Entity("SmartGrocery.Api.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -38,6 +63,9 @@ namespace SmartGrocery.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("CanonicalProductId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -52,8 +80,9 @@ namespace SmartGrocery.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Barcode")
-                        .IsUnique();
+                    b.HasIndex("Barcode");
+
+                    b.HasIndex("CanonicalProductId");
 
                     b.ToTable("Products");
                 });
@@ -134,6 +163,16 @@ namespace SmartGrocery.Api.Migrations
                     b.ToTable("PurchaseItems");
                 });
 
+            modelBuilder.Entity("SmartGrocery.Api.Models.Product", b =>
+                {
+                    b.HasOne("SmartGrocery.Api.Models.CanonicalProduct", "CanonicalProduct")
+                        .WithMany("Products")
+                        .HasForeignKey("CanonicalProductId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CanonicalProduct");
+                });
+
             modelBuilder.Entity("SmartGrocery.Api.Models.PurchaseItem", b =>
                 {
                     b.HasOne("SmartGrocery.Api.Models.Product", "Product")
@@ -151,6 +190,11 @@ namespace SmartGrocery.Api.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Purchase");
+                });
+
+            modelBuilder.Entity("SmartGrocery.Api.Models.CanonicalProduct", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("SmartGrocery.Api.Models.Product", b =>

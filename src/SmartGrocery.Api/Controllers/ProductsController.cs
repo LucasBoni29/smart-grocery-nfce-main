@@ -19,13 +19,13 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Product>>> GetAll()
     {
-        return await _context.Products.OrderBy(p => p.Name).ToListAsync();
+        return await _context.Products.Include(p => p.CanonicalProduct).OrderBy(p => p.Name).ToListAsync();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Product>> GetById(int id)
     {
-        var product = await _context.Products.FindAsync(id);
+        var product = await _context.Products.Include(p => p.CanonicalProduct).FirstOrDefaultAsync(p => p.Id == id);
         if (product is null)
             return NotFound();
 

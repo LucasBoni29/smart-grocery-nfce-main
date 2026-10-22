@@ -11,6 +11,9 @@ public class Product
     public string? Barcode { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public int? CanonicalProductId { get; set; }
+    public CanonicalProduct? CanonicalProduct { get; set; }
+
     [JsonIgnore]
     public ICollection<PurchaseItem> PurchaseItems { get; set; } = new List<PurchaseItem>();
 }
